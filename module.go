@@ -11,8 +11,8 @@ import (
 
 const (
 	myName     = "github.com/bitwormhole/starter-gorm-sqlserver"
-	myVersion  = "v0.0.1"
-	myRevision = 1
+	myVersion  = "v0.0.3"
+	myRevision = 3
 )
 
 // DriverModule 导出本模块
