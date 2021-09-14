@@ -1,4 +1,4 @@
-package sqlserver
+package driver
 
 import (
 	"errors"
@@ -6,14 +6,30 @@ import (
 	"strings"
 
 	"github.com/bitwormhole/starter-gorm/datasource"
+	"github.com/bitwormhole/starter/markup"
 	driver_pkg "gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
 )
 
-type Driver struct {
+// SQLServerDriver 是SQLServer的starter-gorm驱动
+type SQLServerDriver struct {
+	markup.Component
 }
 
-func (inst *Driver) Open(cfg *datasource.Configuration) (datasource.Source, error) {
+func (inst *SQLServerDriver) _Impl() datasource.Driver {
+	return inst
+}
+
+// Accept 用于确定是否支持给定的配置
+func (inst *SQLServerDriver) Accept(cfg *datasource.Configuration) bool {
+	name := cfg.Driver
+	name = strings.TrimSpace(name)
+	name = strings.ToLower(name)
+	return name == "sqlserver"
+}
+
+// Open 打开数据源
+func (inst *SQLServerDriver) Open(cfg *datasource.Configuration) (datasource.Source, error) {
 
 	//	dsn := "sqlserver://gorm:LoremIpsum86@localhost:9930/?database=gorm"
 	//	db, err := gorm.Open(sqlserver.Open(dsn), &gorm.Config{})
@@ -43,8 +59,8 @@ func (inst *Driver) Open(cfg *datasource.Configuration) (datasource.Source, erro
 	gc := &gorm.Config{}
 
 	builder := &datasource.GormDataSourceBuilder{}
-	builder.Config1 = cfg
-	builder.Config2 = gc
+	builder.Config1 = *cfg
+	builder.Config2 = *gc
 	builder.Dialector = dialector
-	return builder.Create()
+	return builder.Open()
 }
