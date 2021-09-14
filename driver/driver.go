@@ -28,6 +28,15 @@ func (inst *SQLServerDriver) Accept(cfg *datasource.Configuration) bool {
 	return name == "sqlserver"
 }
 
+func (inst *SQLServerDriver) prepareForDefaultPort(cfg *datasource.Configuration) {
+	const defport = 1433
+	port := cfg.Port
+	if port < 1 {
+		port = defport
+	}
+	cfg.Port = port
+}
+
 // Open 打开数据源
 func (inst *SQLServerDriver) Open(cfg *datasource.Configuration) (datasource.Source, error) {
 
@@ -37,6 +46,8 @@ func (inst *SQLServerDriver) Open(cfg *datasource.Configuration) (datasource.Sou
 	if cfg == nil {
 		return nil, errors.New("config==nil")
 	}
+
+	inst.prepareForDefaultPort(cfg)
 
 	dsnbuilder := &strings.Builder{}
 	dsnbuilder.WriteString("sqlserver://")
