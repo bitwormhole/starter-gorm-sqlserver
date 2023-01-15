@@ -7,17 +7,25 @@ import (
 
 	"github.com/bitwormhole/starter-gorm/datasource"
 	"github.com/bitwormhole/starter/markup"
+	"gorm.io/driver/sqlserver"
 	driver_pkg "gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
 )
 
 // SQLServerDriver 是SQLServer的starter-gorm驱动
 type SQLServerDriver struct {
-	markup.Component
+	markup.Component `class:"starter-gorm-driver-registry"`
 }
 
-func (inst *SQLServerDriver) _Impl() datasource.Driver {
-	return inst
+func (inst *SQLServerDriver) _Impl() (datasource.Driver, datasource.DriverRegistry) {
+	return inst, inst
+}
+
+// GetRegistration ...
+func (inst *SQLServerDriver) GetRegistration() *datasource.DriverRegistration {
+	return &datasource.DriverRegistration{
+		Driver: inst,
+	}
 }
 
 // Accept 用于确定是否支持给定的配置
@@ -26,15 +34,6 @@ func (inst *SQLServerDriver) Accept(cfg *datasource.Configuration) bool {
 	name = strings.TrimSpace(name)
 	name = strings.ToLower(name)
 	return name == "sqlserver"
-}
-
-func (inst *SQLServerDriver) prepareForDefaultPort(cfg *datasource.Configuration) {
-	const defport = 1433
-	port := cfg.Port
-	if port < 1 {
-		port = defport
-	}
-	cfg.Port = port
 }
 
 // Open 打开数据源
@@ -67,11 +66,37 @@ func (inst *SQLServerDriver) Open(cfg *datasource.Configuration) (datasource.Sou
 		return nil, errors.New("driver_sqlserver.Open() return nil")
 	}
 
-	gc := &gorm.Config{}
+	db, err := gorm.Open(sqlserver.Open(dsn), &gorm.Config{})
+	if err != nil {
+		return nil, err
+	}
 
-	builder := &datasource.GormDataSourceBuilder{}
-	builder.Config1 = *cfg
-	builder.Config2 = *gc
-	builder.Dialector = dialector
-	return builder.Open()
+	return &sqlserverDataSource{db: db}, nil
+}
+
+func (inst *SQLServerDriver) prepareForDefaultPort(cfg *datasource.Configuration) {
+	const defport = 1433
+	port := cfg.Port
+	if port < 1 {
+		port = defport
+	}
+	cfg.Port = port
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+type sqlserverDataSource struct {
+	db *gorm.DB
+}
+
+func (inst *sqlserverDataSource) _Impl() datasource.Source {
+	return inst
+}
+
+func (inst *sqlserverDataSource) DB() (*gorm.DB, error) {
+	return inst.db, nil
+}
+
+func (inst *sqlserverDataSource) Close() error {
+	return nil
 }

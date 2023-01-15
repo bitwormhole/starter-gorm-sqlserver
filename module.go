@@ -4,32 +4,44 @@ import (
 	"embed"
 
 	startergorm "github.com/bitwormhole/starter-gorm"
-	"github.com/bitwormhole/starter-gorm-sqlserver/src/main/etc"
+	"github.com/bitwormhole/starter-gorm-sqlserver/gen/cfgsqlserver"
+	"github.com/bitwormhole/starter-gorm-sqlserver/gen/cfgsqlserverdemo"
 	"github.com/bitwormhole/starter/application"
 	"github.com/bitwormhole/starter/collection"
 )
 
 const (
-	myName     = "github.com/bitwormhole/starter-gorm-sqlserver"
-	myVersion  = "v0.0.4"
-	myRevision = 4
+	theModuleName     = "github.com/bitwormhole/starter-gorm-sqlserver"
+	theModuleVersion  = "v0.0.5"
+	theModuleRevision = 5
+	theModuleResPath  = "src/main/resources"
 )
 
-// DriverModule 导出本模块
+//go:embed src/main/resources
+var theModuleResFS embed.FS
+
+// DriverModule 导出[starter-gorm-sqlserver]模块
 func DriverModule() application.Module {
 
 	mb := &application.ModuleBuilder{}
-	mb.Name(myName).Version(myVersion).Revision(myRevision)
+
+	mb.Name(theModuleName).Version(theModuleVersion).Revision(theModuleRevision)
+	mb.OnMount(cfgsqlserver.ExportConfigForSQLServer)
+	mb.Resources(collection.LoadEmbedResources(&theModuleResFS, theModuleResPath))
 	mb.Dependency(startergorm.Module())
-	mb.OnMount(etc.ExportConfig)
-	mb.Resources(myResources())
 
 	return mb.Create()
 }
 
-//go:embed src/main/resources
-var theResFS embed.FS
+// DemoModule 导出[#demo]模块
+func DemoModule() application.Module {
 
-func myResources() collection.Resources {
-	return collection.LoadEmbedResources(&theResFS, "src/main/resources")
+	mb := &application.ModuleBuilder{}
+
+	mb.Name(theModuleName + "#demo").Version(theModuleVersion).Revision(theModuleRevision)
+	mb.OnMount(cfgsqlserverdemo.ExportConfigForSQLServerDemo)
+	mb.Resources(collection.LoadEmbedResources(&theModuleResFS, theModuleResPath))
+	mb.Dependency(DriverModule())
+
+	return mb.Create()
 }
