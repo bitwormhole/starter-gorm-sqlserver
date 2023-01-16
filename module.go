@@ -25,7 +25,7 @@ func DriverModule() application.Module {
 
 	mb := &application.ModuleBuilder{}
 
-	mb.Name(theModuleName).Version(theModuleVersion).Revision(theModuleRevision)
+	mb.Name(theModuleName + "#driver").Version(theModuleVersion).Revision(theModuleRevision)
 	mb.OnMount(cfgsqlserver.ExportConfigForSQLServer)
 	mb.Resources(collection.LoadEmbedResources(&theModuleResFS, theModuleResPath))
 	mb.Dependency(startergorm.Module())
